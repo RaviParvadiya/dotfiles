@@ -23,9 +23,16 @@ zinit light zsh-users/zsh-syntax-highlighting
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=$HISTSIZE
-setopt SHARE_HISTORY             # share command history between terminals
-setopt HIST_IGNORE_ALL_DUPS      # don't store duplicate entries
-setopt HIST_REDUCE_BLANKS        # remove extra blanks
+
+# History behavior options
+setopt APPEND_HISTORY           # append to the history file, don’t overwrite it
+setopt SHARE_HISTORY            # share command history across all sessions
+setopt HIST_IGNORE_ALL_DUPS     # ignore duplicate commands in history
+setopt HIST_IGNORE_DUPS         # ignore consecutive duplicate commands
+setopt HIST_IGNORE_SPACE        # don't record commands that start with a space
+setopt HIST_SAVE_NO_DUPS        # don't write duplicate entries to the history file
+setopt HIST_FIND_NO_DUPS        # do not display duplicates during history search
+# setopt HIST_REDUCE_BLANKS       # remove extra spaces from commands
 
 # --- Zsh Options ---
 setopt autocd extendedglob nomatch
