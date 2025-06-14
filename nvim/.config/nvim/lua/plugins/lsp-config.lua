@@ -30,10 +30,10 @@ return {
       lspconfig.tailwindcss.setup({
         capabilities = capabilities
       })
-      lspconfig.ruby_lsp.setup({
-        capabilities = capabilities,
-        cmd = { "/home/typecraft/.asdf/shims/ruby-lsp" }
-      })
+      -- lspconfig.ruby_lsp.setup({
+      --   capabilities = capabilities,
+      --   cmd = { "/home/typecraft/.asdf/shims/ruby-lsp" }
+      -- })
       lspconfig.lua_ls.setup({
         capabilities = capabilities
       })

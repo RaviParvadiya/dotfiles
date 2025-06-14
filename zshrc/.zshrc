@@ -23,6 +23,7 @@ zinit light zsh-users/zsh-syntax-highlighting
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=$HISTSIZE
+HISTDUP=erase
 
 # History behavior options
 setopt APPEND_HISTORY           # append to the history file, don’t overwrite it

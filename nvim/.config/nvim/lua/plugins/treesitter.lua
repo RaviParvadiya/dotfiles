@@ -16,6 +16,9 @@ return {
           "typescript",
           "json",
           "lua",
+          "go",
+          "php",
+          "python"
         },
         highlight = { enable = true },
         indent = { enable = false },
