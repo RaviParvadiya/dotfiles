@@ -13,6 +13,11 @@ source "${ZINIT_HOME}/zinit.zsh"
 autoload -Uz compinit
 compinit -d ~/.zcompdump-$HOST
 
+# WP-CLI completion (requires wp-completion.bash to exist)
+# if [ -f ~/.wp-cli/wp-completion.bash ]; then
+#   source ~/.wp-cli/wp-completion.bash
+# fi
+
 # --- Plugins via zinit ---
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-completions
