@@ -1,6 +1,21 @@
 # --- Prompt ---
 eval "$(starship init zsh)"
 
+# --- mise ---
+if command -v mise &> /dev/null; then
+  # export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$HOME/.local/share/omarchy/bin:$PATH"
+  eval "$(~/.local/bin/mise activate zsh)"
+fi
+
+# --- fzf and zoxide integration ---
+if command -v fzf >/dev/null 2>&1; then
+  eval "$(fzf --zsh)"
+fi
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init --cmd cd zsh)"
+fi
+
 # --- Zinit Plugin Manager ---
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [ ! -d "$ZINIT_HOME" ]; then
@@ -13,11 +28,6 @@ source "${ZINIT_HOME}/zinit.zsh"
 autoload -Uz compinit
 compinit -d ~/.zcompdump-$HOST
 
-# WP-CLI completion (requires wp-completion.bash to exist)
-# if [ -f ~/.wp-cli/wp-completion.bash ]; then
-#   source ~/.wp-cli/wp-completion.bash
-# fi
-
 # --- Plugins via zinit ---
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-completions
@@ -26,54 +36,117 @@ zinit light zsh-users/zsh-syntax-highlighting
 
 # --- History ---
 HISTFILE=~/.histfile
-HISTSIZE=10000
+HISTSIZE=32768
 SAVEHIST=$HISTSIZE
 HISTDUP=erase
 
 # History behavior options
 setopt APPEND_HISTORY           # append to the history file, don’t overwrite it
+setopt INC_APPEND_HISTORY       # write commands to history file immediately
 setopt SHARE_HISTORY            # share command history across all sessions
 setopt HIST_IGNORE_ALL_DUPS     # ignore duplicate commands in history
-setopt HIST_IGNORE_DUPS         # ignore consecutive duplicate commands
 setopt HIST_IGNORE_SPACE        # don't record commands that start with a space
 setopt HIST_SAVE_NO_DUPS        # don't write duplicate entries to the history file
 setopt HIST_FIND_NO_DUPS        # do not display duplicates during history search
-# setopt HIST_REDUCE_BLANKS       # remove extra spaces from commands
+setopt HIST_REDUCE_BLANKS       # remove extra spaces from commands
 
 # --- Zsh Options ---
 setopt autocd extendedglob nomatch
+
+# Use Emacs-style keybindings
 bindkey -e
 
 # --- Completion styling ---
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color "$realpath"'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color "$realpath"'
+zstyle ':completion:*' mark-symlinked-directories yes
+zstyle ':completion:*' match-hidden-files false
+zstyle -e ':completion:*:(ssh|scp|sftp|rsh|rsync):hosts' hosts 'reply=(${=${${(f)"$(cat {/etc/ssh_,~/.ssh/known_}hosts(|2)(N) /dev/null)"}%%[# ]*}//,/ })'
+
 
 # --- Aliases ---
-# exa/ls
-if command -v exa >/dev/null 2>&1; then
-  alias ls='exa --color=always --group-directories-first'
-  alias ll='exa -lh --group-directories-first'
-  alias la='exa -lha --group-directories-first'
-  alias lt='exa -lT --level=2 --group-directories-first'   # Tree view
-  alias lg='exa -l --git --group-directories-first'        # Git info
-else
-  alias ls='ls --color=auto'
-  alias ll='ls -lhF --color=auto'
-  alias la='ls -la --color=auto'
-  alias l='ls -CF --color=auto'
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --color=always --group-directories-first --icons=auto'
+  alias ll='ls -lh'
+  alias la='ls -lah'
+  alias lt='eza --tree --level=2 --long --icons --git'
+  alias lta='lt -a'
 fi
 
-# Common navigation
+alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+
+if command -v zoxide &> /dev/null; then
+  alias cd="zd"
+  zd() {
+    if [ $# -eq 0 ]; then
+      builtin cd ~ && return
+    elif [ -d "$1" ]; then
+      builtin cd "$1"
+    else
+      z "$@" && printf "\U000F17A9 " && pwd || echo "Error: Directory not found"
+    fi
+  }
+fi
+
+new_tmux () {
+  session_dir=$(zoxide query --list | fzf)
+  session_name=$(basename "$session_dir")
+
+  if tmux has-session -t $session_name 2>/dev/null; then
+    if [ -n "$TMUX" ]; then
+      tmux switch-client -t "$session_name"
+    else
+      tmux attach -t "$session_name"
+    fi
+    notification="tmux attached to $session_name"
+  else
+    if [ -n "$TMUX" ]; then
+      tmux new-session -d -c "$session_dir" -s "$session_name" && tmux switch-client -t "$session_name"
+      notification="new tmux session INSIDE TMUX: $session_name"
+    else
+      tmux new-session -c "$session_dir" -s "$session_name"
+      notification="new tmux session: $session_name"
+    fi
+  fi
+
+  if [ -s "$session_name" ]; then
+    notify-send "$notification"
+  fi
+}
+
+alias tm=new_tmux
+
+# Open file/URL in default app (background)
+open() {
+  xdg-open "$@" >/dev/null 2>&1 &
+}
+
+# --- Common navigation ---
 alias ..='cd ..'
 alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# --- Tools ---
 alias grep='grep --color=auto'
+alias diff='diff --color=auto'
+alias ip='ip -c=auto'
 alias df='df -h'
 alias du='du -h'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
 alias vim='nvim'
 alias c='clear'
+n() { if [ "$#" -eq 0 ]; then nvim .; else nvim "$@"; fi; } # Open Neovim n current dir or specific file
+
+# --- Git ---
+alias g='git'
+alias gcm='git commit -m'
+alias gcam='git commit -a -m'
+alias gcad='git commit -a --amend'
 
 # --- Keybindings ---
 bindkey '^R' history-incremental-search-backward
@@ -81,25 +154,16 @@ bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 bindkey '^[w' kill-region
 
-# --- Environment ---
+# --- Environment Variables ---
 export EDITOR="nvim"
-export VISUAL="nvim"
+export VISUAL="$EDITOR"
+export SUDO_EDITOR="$EDITOR"
+export BAT_THEME=ansi
 export PAGER="less"
-
-# --- Path ---
-export PATH="$HOME/.local/bin:$PATH"
 
 # --- Golang ---
 export GOPATH="$HOME/go"
 export GOBIN="$GOPATH/bin"
 export PATH="$GOBIN:$PATH"
-
-# --- fzf and zoxide integration ---
-if command -v fzf >/dev/null 2>&1; then
-  eval "$(fzf --zsh)"
-fi
-if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init --cmd cd zsh)"
-fi
 
 [[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
