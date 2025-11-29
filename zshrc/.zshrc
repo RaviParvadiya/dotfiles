@@ -4,7 +4,7 @@ eval "$(starship init zsh)"
 # --- mise ---
 if command -v mise &> /dev/null; then
   # export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$HOME/.local/share/omarchy/bin:$PATH"
-  eval "$(~/.local/bin/mise activate zsh)"
+  eval "$(mise activate zsh)"
 fi
 
 # --- fzf and zoxide integration ---
