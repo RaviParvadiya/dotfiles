@@ -2,27 +2,13 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = function()
-      local config = require("nvim-treesitter.configs")
-      config.setup({
-        auto_install = false,
-        ensure_installed = {
-          "bash",
-          "ruby",
-          "html",
-          "css",
-          "scss",
-          "javascript",
-          "typescript",
-          "json",
-          "lua",
-          "go",
-          "php",
-          "python"
-        },
-        highlight = { enable = true },
-        indent = { enable = false },
+    opts = function(_, opts)
+      -- merge with default LazyVim parsers
+      opts.ensure_installed = vim.list_extend(opts.ensure_installed or {}, {
+        "css", "ruby", "scss", "go", "php"
       })
-    end
+      opts.indent.enable = false  -- only override indent
+    end,
+    event = { "BufReadPost", "BufNewFile" },  -- lazy-load on file open
   }
 }

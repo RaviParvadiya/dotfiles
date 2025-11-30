@@ -1,13 +1,12 @@
 return {
-  "stevearc/oil.nvim",
-  dependencies = {
-    { "echasnovski/mini.icons", lazy = false },
-    { "nvim-tree/nvim-web-devicons" }
-  },
-  config = function()
-    local oil = require("oil")
-    oil.setup()
-    vim.keymap.set("n", "-", oil.toggle_float, {})
-  end,
-  lazy = false,
+	"stevearc/oil.nvim",
+	cmd = "Oil",
+	keys = {
+		{ "-", function() require("oil").open() end, desc = "Oil Browser" },
+	},
+	opts = {}, -- default Oil settings
+	dependencies = {
+		"nvim-mini/mini.icons", -- LazyVim already loads this, but still ok
+		"nvim-tree/nvim-web-devicons",
+	},
 }
